@@ -1,0 +1,4 @@
+# The format of servers will be:
+# port@server.domain
+# Examples:
+# 29006@lic-nx-4455.mydomain.com
