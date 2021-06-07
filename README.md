@@ -20,16 +20,12 @@ Install requirements
 $ pip install -r requirements.txt
 ```
 
-Change the value of Telegram Token to set yours.
+Create .env file to set your values
 
 ```
-Change <YourToken>
-```
-
-Change the value of Telegram ChatID to set yours.
-
-```
-Change <YourChatID>
+BASE_PATH="Your_Home_Path"
+TELEGRAM_API_TOKEN="Your_Telegram_API_Token"
+TELEGRAM_CHAT_ID="Your_Chat_ID"
 ```
 
 ## Configure system ⚙️
@@ -37,7 +33,7 @@ Change <YourChatID>
 The script is designed to check every XX minutes the status of the system services and network licenses.
 So, it can be added to the crontab for checking every 10 minutes, for example:
 ```
- */10 * * * * /usr/bin/python3 /home/YourUser/scripts/monitoringEIB/check.py
+ */10 * * * * /usr/bin/python3 /YourHome/EIBmonitor/check.py
 ```
 
 You can specify the network licenses hostnames you want to monitor editing _licensesToCheck.txt_.
