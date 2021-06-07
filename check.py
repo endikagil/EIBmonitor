@@ -1,59 +1,64 @@
 # -*- coding: utf-8 -*-
 
 # Developed by Endika Gil
-# Github:   https://github.com/endikagil/monitoringEIB
+# Github:   https://github.com/endikagil/EIBmonitor
 #
 # The script checks for some services and network licenses status and notifies throught Telegram
 # It can be added to crontab for checking every XX minutes:
-# */10 * * * * /usr/bin/python3 /home/YourUser/scripts/monitoringEIB/check.py ##
+# */10 * * * * /usr/bin/python3 /YourHome/EIBmonitor/check.py ##
+# Use .env file to specify sensitive information: BASE_PATH, TELEGRAM_API_TOKEN, TELEGRAM_CHAT_ID
 
 import requests     # Used for sending message using Telegram
 import json         # Used to work with Telegram json response
 import subprocess   # Used for checking system services status (returns status code)
 import os           # Used for working with system files
 import datetime     # Used for accessing to system datetime
+from dotenv import load_dotenv # Used for reading .env files and hidde sensitive information
+load_dotenv()
 
 #
 # Global configuration
 #
 
-BASE="/home/YourUser/scripts/monitoringEIB/"
+BASE_PATH = os.getenv('BASE_PATH')
 LOGS="logs"
+TELEGRAM_API_TOKEN=os.getenv('TELEGRAM_API_TOKEN')
+TELEGRAM_CHAT_ID=os.getenv('TELEGRAM_CHAT_ID')
 
 def sendTelegram(element, service):
     if element == "service":
-        r = requests.post('https://api.telegram.org/bot<YourToken>/sendMessage',
-            data={'chat_id': '<YourChatID>', 'text': 'El demonio '+service+' está caído'})
+        r = requests.post('https://api.telegram.org/bot'+TELEGRAM_API_TOKEN+'/sendMessage',
+            data={'chat_id': TELEGRAM_CHAT_ID, 'text': 'El demonio '+service+' está caído'})
         data = json.loads(r.text)
         # Checking if message was sent correctly
         if data['ok']:
             # If was sent correctly, create flag for no more notifying about same problem
-            file = open(BASE+LOGS+"/notificado"+service, "w")
+            file = open(BASE_PATH+LOGS+"/notificado"+service, "w")
             file.write("Notificado el "+str(datetime.datetime.now()))
             file.close()
         else:
             # If message could not be sent, create flag notifying it
-            file = open(BASE+LOGS+"/error_al_enviar_telegram", "w")
+            file = open(BASE_PATH+LOGS+"/error_al_enviar_telegram", "w")
             file.write("No se ha podido notificar la caída del demonio "+service+" el "+str(datetime.datetime.now()))
             file.close()
     if element == "license":
-        r = requests.post('https://api.telegram.org/bot<YourToken>/sendMessage',
-            data={'chat_id': '<YourChatID>', 'text': 'La license '+service+' está caída'})
+        r = requests.post('https://api.telegram.org/bot'+TELEGRAM_API_TOKEN+'/sendMessage',
+            data={'chat_id': TELEGRAM_CHAT_ID, 'text': 'La license '+service+' está caída'})
         data = json.loads(r.text)
         # Checking if message was sent correctly
         if data['ok']:
             # If was sent correctly, create flag for no more notifying about same problem
-            file = open(BASE+LOGS+"/notificado"+service, "w")
+            file = open(BASE_PATH+LOGS+"/notificado"+service, "w")
             file.write("Notificado el "+str(datetime.datetime.now()))
             file.close()
         else:
             # If message could not be sent, create flag notifying it
-            file = open(BASE+LOGS+"/error_al_enviar_telegram", "w")
+            file = open(BASE_PATH+LOGS+"/error_al_enviar_telegram", "w")
             file.write("No se ha podido notificar la caída de la license "+service+" el "+str(datetime.datetime.now()))
             file.close()
 
 def previouslyNotified(service):
-    notifiedTelegram = os.path.isfile(BASE+LOGS+"/notificado"+service)
+    notifiedTelegram = os.path.isfile(BASE_PATH+LOGS+"/notificado"+service)
     if notifiedTelegram:
         return True
     else:
@@ -79,10 +84,10 @@ def checkService(service):
 
         if previouslyNotified(service):
             # If service is now active and was previously notified about was down, delete flag
-            os.remove(BASE+LOGS+"/notificado"+service)
+            os.remove(BASE_PATH+LOGS+"/notificado"+service)
 
 def checkLicense(server):
-    licenseStatus = os.popen(BASE+"/flexlm_v11.13.1.1/lmstat -a -c "+server).read().upper()
+    licenseStatus = os.popen(BASE_PATH+"/flexlm_v11.13.1.1/lmstat -a -c "+server).read().upper()
     licenseStatusFiltred = licenseStatus.find("DOWN")
     if not licenseStatusFiltred == -1:
         # license KO
@@ -91,7 +96,7 @@ def checkLicense(server):
     else:
         if previouslyNotified(server):
             # If license is now active and was previously notified about was down, delete flag
-            os.remove(BASE+LOGS+"/notificado"+server)
+            os.remove(BASE_PATH+LOGS+"/notificado"+server)
 
 
 # Checking services

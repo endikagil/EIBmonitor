@@ -1,12 +1,9 @@
 # Name of services to check
 FOGMulticastManager
-#FOGImageReplicator
 FOGImageSize
 FOGPingHosts
 FOGpxe
 FOGScheduler
-#FOGSnapinHash
-#FOGSnapinReplicator
 apache2
 dnsmasq
 mariadb
