@@ -21,7 +21,7 @@ load_dotenv()
 #
 
 BASE_PATH = os.getenv('BASE_PATH')
-LOGS="logs"
+LOGS="/logs"
 TELEGRAM_API_TOKEN=os.getenv('TELEGRAM_API_TOKEN')
 TELEGRAM_CHAT_ID=os.getenv('TELEGRAM_CHAT_ID')
 
