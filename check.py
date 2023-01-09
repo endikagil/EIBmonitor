@@ -25,37 +25,22 @@ LOGS="/logs"
 TELEGRAM_API_TOKEN=os.getenv('TELEGRAM_API_TOKEN')
 TELEGRAM_CHAT_ID=os.getenv('TELEGRAM_CHAT_ID')
 
-def sendTelegram(element, service):
-    if element == "service":
-        r = requests.post('https://api.telegram.org/bot'+TELEGRAM_API_TOKEN+'/sendMessage',
-            data={'chat_id': TELEGRAM_CHAT_ID, 'text': 'El demonio '+service+' está caído'})
-        data = json.loads(r.text)
-        # Checking if message was sent correctly
-        if data['ok']:
-            # If was sent correctly, create flag for no more notifying about same problem
-            file = open(BASE_PATH+LOGS+"/notificado"+service, "w")
-            file.write("Notificado el "+str(datetime.datetime.now()))
-            file.close()
-        else:
-            # If message could not be sent, create flag notifying it
-            file = open(BASE_PATH+LOGS+"/error_al_enviar_telegram", "w")
-            file.write("No se ha podido notificar la caída del demonio "+service+" el "+str(datetime.datetime.now()))
-            file.close()
-    if element == "license":
-        r = requests.post('https://api.telegram.org/bot'+TELEGRAM_API_TOKEN+'/sendMessage',
-            data={'chat_id': TELEGRAM_CHAT_ID, 'text': 'La license '+service+' está caída'})
-        data = json.loads(r.text)
-        # Checking if message was sent correctly
-        if data['ok']:
-            # If was sent correctly, create flag for no more notifying about same problem
-            file = open(BASE_PATH+LOGS+"/notificado"+service, "w")
-            file.write("Notificado el "+str(datetime.datetime.now()))
-            file.close()
-        else:
-            # If message could not be sent, create flag notifying it
-            file = open(BASE_PATH+LOGS+"/error_al_enviar_telegram", "w")
-            file.write("No se ha podido notificar la caída de la license "+service+" el "+str(datetime.datetime.now()))
-            file.close()
+def sendTelegram(message, messageLOG, service):
+    r = requests.post('https://api.telegram.org/bot'+TELEGRAM_API_TOKEN+'/sendMessage',
+        data={'chat_id': TELEGRAM_CHAT_ID, 'text': message+service})
+    data = json.loads(r.text)
+    # Checking if message was sent correctly
+    if data['ok']:
+        # If was sent correctly, create flag for no more notifying about same problem
+        file = open(BASE_PATH+LOGS+"/notificado"+service, "w")
+        file.write("Notificado el "+str(datetime.datetime.now()))
+        file.close()
+    else:
+        # If message could not be sent, create flag notifying it
+        file = open(BASE_PATH+LOGS+"/error_al_enviar_telegram", "w")
+        file.write("No se ha podido notificar "+messageLOG+service+" el "+str(datetime.datetime.now()))
+        file.close()
+ 
 
 def previouslyNotified(service):
     notifiedTelegram = os.path.isfile(BASE_PATH+LOGS+"/notificado"+service)
@@ -69,17 +54,19 @@ def checkService(service):
                         stdout=subprocess.PIPE)
     (output, err) = p.communicate()
     output = output.decode('utf-8')
+    message = "Se ha caído el demonio "
+    messageLOG = "la caída del demonio "
     if output.strip() != "active":
         if not previouslyNotified(service):
-            sendTelegram("service",service)
+            sendTelegram(message,messageLOG,service)
             os.system("sudo systemctl restart "+service)
     else:
         # Checking a warning of FOGMulticastManager service that besides service is active doest not run correctly
         if service == "FOGMulticastManager":
-            there_some_error = os.system('service FOGMulticastManager status |grep "PHP Fatal error:"')
+            there_some_error = os.system('/usr/sbin/service FOGMulticastManager status |grep "PHP Fatal error:"')
             if not there_some_error:
                 if not previouslyNotified(service):
-                    sendTelegram("service",service)
+                    sendTelegram(message,messageLOG,service)
                     os.system("sudo systemctl restart "+service)
 
         if previouslyNotified(service):
@@ -92,11 +79,16 @@ def checkLicense(server):
     if not licenseStatusFiltred == -1:
         # license KO
         if not previouslyNotified(server):
-            sendTelegram("license",server)
+            message = "Se ha caído la licencia "
+            messageLOG = "la caída de la licencia "
+            sendTelegram(message,messageLOG,server)
     else:
         if previouslyNotified(server):
             # If license is now active and was previously notified about was down, delete flag
             os.remove(BASE_PATH+LOGS+"/notificado"+server)
+            message = "Se ha levantado la licencia "
+            messageLOG = "el levantamiento de la licencia "
+            sendTelegram(message,messageLOG,server)
 
 
 # Checking services
