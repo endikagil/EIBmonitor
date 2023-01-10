@@ -75,8 +75,8 @@ def checkService(service):
 
 def checkLicense(server):
     licenseStatus = os.popen(BASE_PATH+"/flexlm_v11.13.1.1/lmstat -a -c "+server).read().upper()
-    licenseStatusFiltred = licenseStatus.find("DOWN")
-    if not licenseStatusFiltred == -1:
+    licenseStatusFiltered = licenseStatus.find("DOWN")
+    if not licenseStatusFiltered == -1:
         # license KO
         if not previouslyNotified(server):
             message = "Se ha caído la licencia "
@@ -92,14 +92,14 @@ def checkLicense(server):
 
 
 # Checking services
-f = open('servicesToCheck.txt', "r")
+f = open(BASE_PATH+'/servicesToCheck.txt', "r")
 for line in f:
     # Ignore comments
     if not line.startswith("#"):
         checkService(line.strip())
 
 # Checking network licenses
-f = open('licensesToCheck.txt', "r")
+f = open(BASE_PATH+'/licensesToCheck.txt', "r")
 for line in f:
     # Ignore comments
     if not line.startswith("#"):
