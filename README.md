@@ -39,10 +39,15 @@ So, it can be added to the crontab for checking every 10 minutes, for example:
  */10 * * * * /usr/bin/python3 /Path_to_EIBmonitor_folder/check.py
 ```
 
+If you want to notify you if the task had errors you can also add some more commands to send you an email, for example:
+```
+*/10 * * * * OUTPUT=`/usr/bin/python3 /Path_to_EIBmonitor_folder/check.py 2>&1` || echo "$OUTPUT" | mail -s "EIBmonitor script error" yourEmail@domain
+```
+
 You can specify the network licenses hostnames you want to monitor editing _licensesToCheck.txt_.
 
-In the same way, you can specify the name of your machine services that want to monitor and restart again editing _servicesToCheck.txt_
+In the same way, you can specify the name of your machine services that want to monitor and restart them again editing _servicesToCheck.txt_
 
 ## Author ✒️
 
-* **Endika Gil** - *Initial Work* - [endikagil](https://github.com/endikagil)
+* **Endika Gil** - [endikagil](https://github.com/endikagil)
