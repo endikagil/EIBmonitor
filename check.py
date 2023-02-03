@@ -72,6 +72,9 @@ def checkService(service):
         if previouslyNotified(service):
             # If service is now active and was previously notified about was down, delete flag
             os.remove(BASE_PATH+LOGS+"/notificado"+service)
+            message = "Se ha levantado el demonio "
+            messageLOG = "el levantamiento del demonio "
+            sendTelegram(message,messageLOG,service)            
 
 def checkLicense(server):
     licenseStatus = os.popen(BASE_PATH+"/flexlm_v11.13.1.1/lmstat -a -c "+server).read().upper()
