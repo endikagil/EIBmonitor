@@ -31,16 +31,17 @@ def sendTelegram(message, messageLOG, service):
     data = json.loads(r.text)
     # Checking if message was sent correctly
     if data['ok']:
-        # If was sent correctly, create flag for no more notifying about same problem
-        file = open(BASE_PATH+LOGS+"/notificado"+service, "w")
-        file.write("Notificado el "+str(datetime.datetime.now()))
-        file.close()
+        if not previouslyNotified(service):
+            # If was sent correctly, create flag for no more notifying about same problem
+            file = open(BASE_PATH+LOGS+"/notificado"+service, "w")
+            file.write("Notificado el "+str(datetime.datetime.now()))
+            file.close()
     else:
         # If message could not be sent, create flag notifying it
         file = open(BASE_PATH+LOGS+"/error_al_enviar_telegram", "w")
         file.write("No se ha podido notificar "+messageLOG+service+" el "+str(datetime.datetime.now()))
         file.close()
- 
+
 
 def previouslyNotified(service):
     notifiedTelegram = os.path.isfile(BASE_PATH+LOGS+"/notificado"+service)
@@ -54,9 +55,9 @@ def checkService(service):
                         stdout=subprocess.PIPE)
     (output, err) = p.communicate()
     output = output.decode('utf-8')
-    message = "Se ha caído el demonio "
-    messageLOG = "la caída del demonio "
     if output.strip() != "active":
+        message = "Se ha caído el demonio "
+        messageLOG = "la caída del demonio "
         if not previouslyNotified(service):
             sendTelegram(message,messageLOG,service)
             os.system("sudo systemctl restart "+service)
@@ -71,15 +72,18 @@ def checkService(service):
 
         if previouslyNotified(service):
             # If service is now active and was previously notified about was down, delete flag
-            os.remove(BASE_PATH+LOGS+"/notificado"+service)
             message = "Se ha levantado el demonio "
             messageLOG = "el levantamiento del demonio "
-            sendTelegram(message,messageLOG,service)            
+            sendTelegram(message,messageLOG,service)
+            try:
+                os.remove(BASE_PATH+LOGS+"/notificado"+service)
+            except OSError as error:
+                print(error)
 
 def checkLicense(server):
     licenseStatus = os.popen(BASE_PATH+"/flexlm_v11.13.1.1/lmstat -a -c "+server).read().upper()
-    licenseStatusFiltered = licenseStatus.find("DOWN")
-    if not licenseStatusFiltered == -1:
+    licenseStatusFiltred = licenseStatus.find("DOWN")
+    if not licenseStatusFiltred == -1:
         # license KO
         if not previouslyNotified(server):
             message = "Se ha caído la licencia "
