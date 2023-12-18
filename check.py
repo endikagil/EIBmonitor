@@ -92,10 +92,10 @@ def checkLicense(server):
     else:
         if previouslyNotified(server):
             # If license is now active and was previously notified about was down, delete flag
-            os.remove(BASE_PATH+LOGS+"/notificado"+server)
             message = "Se ha levantado la licencia "
             messageLOG = "el levantamiento de la licencia "
             sendTelegram(message,messageLOG,server)
+            os.remove(BASE_PATH+LOGS+"/notificado"+server)
 
 
 # Checking services
